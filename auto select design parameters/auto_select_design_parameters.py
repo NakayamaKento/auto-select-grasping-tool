@@ -14,3 +14,5 @@ for row in f:
     #row[0]で必要な項目を取得することができる
     print(row)
 
+#git test
+
