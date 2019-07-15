@@ -1,0 +1,13 @@
+﻿No,Name ,Fitted shapes,Open width,Min finger length,Slant median,Curvature radius median
+1,body upper ,box,80.9,41.2,N/A,64.6
+2,body lower,box,78.7,39.2,N/A,58.1
+3,front stay,cylinder,8.5,47.6,N/A,N/A
+4,rear stay,box,32.6,85,11.4,N/A
+5,wing top,box,19,100,5.7,N/A
+6,wing bottom,box,19.2,94,5.9,N/A
+7,bolt,cylinder,11.1,15.6,N/A,N/A
+8,nut,cylinder,8.8,14.9,N/A,N/A
+9,cockpit,box,47,17,0,N/A
+10,propeller1,cylinder,27,8,N/A,N/A
+11,propeller2,box,7.2,50,5.8,N/A
+12,wheel,cylinder,30.7,32.3,N/A,N/A
