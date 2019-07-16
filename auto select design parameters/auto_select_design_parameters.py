@@ -1,3 +1,4 @@
+import pprint
 import csv
 # https://qiita.com/motoki1990/items/0274d8bcf1a97fe4a869
 
@@ -36,14 +37,14 @@ for row in f:
 ###### 2指の傾斜について、総当たりで使えるやつを探す 
 ###### まずは結果を格納するリストを作成
 grasping_tool_two_slant = []
-stroke = 48 ### SMCの2指ハンド
+stroke_two = 48 ### SMCの2指ハンド
 phy = 5
 
 
 for index_tool, tool in enumerate(two_finger_slant):
 	test = []
 	for index_part, part in enumerate(two_finger_slant):
-		if float(tool[3]) - stroke/2 < float(part[3]) and float(tool[3]) + stroke/2 > float(part[3]):
+		if float(tool[3]) - stroke_two/2 < float(part[3]) and float(tool[3]) + stroke_two/2 > float(part[3]):
 			if float(tool[4]) > float(part[4])/2:
 				if float(tool[5]) - phy < float(part[5]) and float(tool[5]) + phy > float(part[5]):
 					test.append(True)
@@ -51,8 +52,44 @@ for index_tool, tool in enumerate(two_finger_slant):
 		test.append( False)
 	grasping_tool_two_slant.append(test)
 
-print(two_finger_slant)
-print( grasping_tool_two_slant)
+pprint.pprint(two_finger_slant)
+pprint.pprint( grasping_tool_two_slant)
+
+###### 2指の曲率について、総当たりを考える
+grasping_tool_two_curv = []
+curv = 5
+
+for index_tool, tool in enumerate(two_finger_curv):
+	test = []
+	for index_part, part in enumerate(two_finger_curv):
+		if float(tool[3]) - stroke_two/2 < float(part[3]) and float(tool[3]) + stroke_two/2 > float(part[3]):
+			if float(tool[4]) > float(part[4])/2:
+				if float(tool[6]) - curv < float(part[6]) and float(tool[6]) + curv > float(part[6]):
+					test.append(True)
+					continue
+		test.append( False)
+	grasping_tool_two_curv.append(test)
+
+pprint.pprint(two_finger_curv)
+pprint.pprint(grasping_tool_two_curv)
+
+###### 3指について、総当たりを考える
+grasping_tool_three = []
+stroke_three = 8
+
+for index_tool, tool in enumerate(three_finger):
+	test = []
+	for index_part, part in enumerate(three_finger):
+		if float(tool[3]) - stroke_three/2 < float(part[3]) and float(tool[3]) + stroke_three/2 > float(part[3]):
+			if float(tool[4]) > float(part[4])/2:
+				test.append(True)
+				continue
+		test.append( False)
+	grasping_tool_three.append(test)
+
+pprint.pprint(three_finger)
+pprint.pprint(grasping_tool_three)
+
 
 #print("two_finger_slant")
 #print(two_finger_slant)
