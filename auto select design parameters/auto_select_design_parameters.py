@@ -113,23 +113,27 @@ slant_max = Max_parameter(two_slant_part, 5) + phy
 tool_para_slant = []
 
 ##### で、その値をもとに把持ツールパラメータ一覧を作成
+##### 刻み幅は d_slant, d_finger, d_stroke で管理（指とストロークは他のやつでも共通の値）
 No = 0
 stroke_slant = stroke_slant_min
 finger_slant = finger_slant_min
 slant = slant_min
+d_slant = 1.0
+d_finger = 10.0
+d_stroke = 4.0
 
 while stroke_slant <= stroke_slant_max:
 	while finger_slant <= finger_slant_max:
 		while slant <= slant_max:
 			tool_para_slant.append([No, stroke_slant, finger_slant, slant])
-			slant += 1.0
+			slant += d_slant
 			No += 1
 		slant = slant_min
-		finger_slant += 10.0
+		finger_slant += d_finger
 	finger_slant = finger_slant_min
-	stroke_slant += 4
+	stroke_slant += d_stroke
 
-print("Create " + str(len(tool_para_slant)) + " tools")
+print("Create " + str(len(tool_para_slant)) + " tools of slant")
 
 ## ストローク、指の長さ、傾斜の順で条件を満たすか確認する、結果を真偽で格納
 ## 全部 偽 やったらいらんから flagで管理
@@ -162,58 +166,135 @@ for tool in tool_TF_slant:
 print()
 
 
-
-
-###### 2指の曲率について、総当たりを考える
-grasping_tool_two_curv = []
+###### 2指の曲率について、しらみつぶしを考える
+tool_TF_curv = []
 curv = 5	### 曲率の幅、前後に5mm与える
 
+##### 次に、それぞれのパラメータの探索範囲（最大値と最小値）を決定
+##### ストロークはマイナスになったら計算数が大くなるだけやから、無視する
+stroke_curv_min = Min_parameter(two_curv_part, 3) - stroke_two/2
+if stroke_curv_min < 0:	#マイナスになったら計算数が大くなるだけやから、無視する
+	stroke_curv_min = 0
+stroke_curv_max = Max_parameter(two_curv_part, 3) + stroke_two/2
+finger_curv_min = Min_parameter(two_curv_part, 4) / 2
+finger_curv_max = Max_parameter(two_curv_part, 4) * 1.5
+curv_min = Min_parameter(two_curv_part, 6) - curv
+curv_max = Max_parameter(two_curv_part, 6) + curv
+tool_para_curv = []
+
+##### で、その値をもとに把持ツールパラメータ一覧を作成
+##### 刻み幅は d_curv, d_finger, d_stroke で管理（指とストロークは他のやつでも共通の値）
+No = 0
+stroke_curv = stroke_curv_min
+finger_curv = finger_curv_min
+curv = curv_min
+d_curv = 1.0
+
+while stroke_curv <= stroke_curv_max:
+	while finger_curv <= finger_curv_max:
+		while curv <= curv_max:
+			tool_para_curv.append([No, stroke_curv, finger_curv, curv])
+			curv += d_curv
+			No += 1
+		curv = curv_min
+		finger_curv += d_finger
+	finger_curv = finger_curv_min
+	stroke_curv += d_curv
+
+print("Create " + str(len(tool_para_curv)) + " tools of curv")
+
 ## ストローク、指の長さ、曲率の順で条件を満たすか確認する、結果を真偽で格納
-for index_tool, tool in enumerate(two_curv_part):
+for index_tool, tool in enumerate(tool_para_curv):
+	flag = 0
 	pool = []
 	pool.append(tool[0])
 	for index_part, part in enumerate(two_curv_part):
-		if float(tool[3]) - stroke_two/2 < float(part[3]) and float(tool[3]) + stroke_two/2 > float(part[3]):
-			if float(tool[4]) > float(part[4])/2:
-				if float(tool[6]) - curv < float(part[6]) and float(tool[6]) + curv > float(part[6]):
+		if tool[1] - stroke_two/2 < float(part[3]) and tool[1] + stroke_two/2 > float(part[3]):	#ストローク確認
+			if tool[2] > float(part[4])/2 and tool[2] < float(part[4])*2:	#指の長さ確認
+				if tool[3] - curv < float(part[6]) and tool[3] + curv > float(part[6]):	#曲率確認
 					pool.append(True)
+					flag = 1
 					continue
 		pool.append( False)
-	grasping_tool_two_curv.append(pool)
+	if flag == 0:
+		continue
+	tool_TF_curv.append(pool)
 
 pprint.pprint(two_curv_part)
-#pprint.pprint(grasping_tool_two_curv)
+#pprint.pprint(tool_TF_curv)
 print()
 
 print("output min combination")
-Check_min_combnation(grasping_tool_two_curv)
-pprint.pprint(grasping_tool_two_curv)
+Check_min_combnation(tool_TF_curv)
+pprint.pprint(tool_TF_curv)
+# 生き残ったパラメータをNoから出力
+for tool in tool_TF_curv:
+	print(tool_para_curv[tool[0]])
 print()
 
-###### 3指について、総当たりを考える
-grasping_tool_three = []
-stroke_three = 8	# SMCの3指ハンドのストローク
+
+###### 3指について、しらみつぶしを考える
+tool_TF_three = []
+stroke_three = 8.0	# SMCの3指ハンドのストローク
+
+##### 次に、それぞれのパラメータの探索範囲（最大値と最小値）を決定
+##### ストロークはマイナスになったら計算数が大くなるだけやから、無視する
+stroke_three_min = Min_parameter(three_part, 3) - stroke_three/2
+if stroke_three_min < 0:	#マイナスになったら計算数が大くなるだけやから、無視する
+	stroke_three_min = 0
+stroke_three_max = Max_parameter(three_part, 3) + stroke_three/2
+finger_three_min = Min_parameter(three_part, 4) / 2
+finger_three_max = Max_parameter(three_part, 4) * 1.5
+tool_para_three = []
+
+##### で、その値をもとに把持ツールパラメータ一覧を作成
+##### 刻み幅は d_finger, d_stroke で管理（指とストロークは他のやつでも共通の値）
+No = 0
+stroke_three_para = stroke_three_min
+finger_three = finger_three_min
+d_three = 1.0
+
+while stroke_three_para <= stroke_three_max:
+	while finger_three <= finger_three_max:
+		tool_para_three.append([No, stroke_three_para, finger_three])
+		No += 1
+		finger_three += d_finger
+	finger_three = finger_three_min
+	stroke_three_para += d_three
+
+print("Create " + str(len(tool_para_three)) + " tools of three")
+
+
 
 ## ストローク、指の長さの順で条件を満たすか確認する、結果を真偽で格納
-for index_tool, tool in enumerate(three_part):
+for index_tool, tool in enumerate(tool_para_three):
+	flag = 0
 	pool = []
 	pool.append(tool[0])
 	for index_part, part in enumerate(three_part):
-		if float(tool[3]) - stroke_three/2 < float(part[3]) and float(tool[3]) + stroke_three/2 > float(part[3]):
-			if float(tool[4]) > float(part[4])/2:
+		if tool[1] - stroke_three/2 < float(part[3]) and tool[1] + stroke_three/2 > float(part[3]):	#ストローク確認
+			if tool[2] > float(part[4])/2 and tool[2] < float(part[4])*2:	#指の長さ確認
+				flag = 1
 				pool.append(True)
 				continue
 		pool.append( False)
-	grasping_tool_three.append(pool)
+	if flag == 0:
+		continue
+	tool_TF_three.append(pool)
 
 pprint.pprint(three_part)
-pprint.pprint(grasping_tool_three)
+#pprint.pprint(tool_TF_three)
 print()
 
 print("output min combination")
-Check_min_combnation(grasping_tool_three)
-pprint.pprint(grasping_tool_three)
+Check_min_combnation(tool_TF_three)
+pprint.pprint(tool_TF_three)
+# 生き残ったパラメータをNoから出力
+for tool in tool_TF_three:
+	print(tool_para_three[tool[0]])
 print()
+
+
 
 #print("two_slant_part")
 #print(two_slant_part)
