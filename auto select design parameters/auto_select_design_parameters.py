@@ -89,6 +89,9 @@ print("output min combination")
 Check_min_combnation(grasping_tool_two_slant)
 pprint.pprint(grasping_tool_two_slant)
 print()
+
+del grasping_tool_two_slant
+
 ###### 2指の曲率について、総当たりを考える
 grasping_tool_two_curv = []
 curv = 5	### 曲率の幅、前後に5mm与える
@@ -115,6 +118,8 @@ Check_min_combnation(grasping_tool_two_curv)
 pprint.pprint(grasping_tool_two_curv)
 print()
 
+del grasping_tool_two_curv
+
 ###### 3指について、総当たりを考える
 grasping_tool_three = []
 stroke_three = 8	# SMCの3指ハンドのストローク
@@ -140,9 +145,4 @@ Check_min_combnation(grasping_tool_three)
 pprint.pprint(grasping_tool_three)
 print()
 
-#print("two_finger_slant")
-#print(two_finger_slant)
-#print("two_finger_curv")
-#print(two_finger_curv)
-#print("three finger")
-#print(three_finger)
+del grasping_tool_three
