@@ -2,6 +2,7 @@ import pprint
 import sys
 import csv
 import copy
+from operator import itemgetter
 # https://qiita.com/motoki1990/items/0274d8bcf1a97fe4a869
 
 sys.setrecursionlimit(100000)
@@ -25,7 +26,7 @@ def Check(tool_TF, index):	#index行目が不必要かどうかを判断する
 
 	for tool_index, tool in enumerate(tool_list):
 		for part_index, part in enumerate(check_list):
-			if part_index == 0:
+			if part_index == 0 or part_index == 1:	#check_listの0番目の要素はNoのとこやからそこは問答無用でTrueにしとく
 				check_list[part_index] = True
 				continue
 			if tool_list[tool_index][part_index] == True:	#他のパラメータでカバーできているか確認
@@ -137,16 +138,18 @@ print("Create " + str(len(tool_para_slant)) + " tools of slant")
 
 ## ストローク、指の長さ、傾斜の順で条件を満たすか確認する、結果を真偽で格納
 ## 全部 偽 やったらいらんから flagで管理
-## 保存形式は [No, TF, TF, ... ]
+## 保存形式は [No, num of T, TF, TF, ... ]
 for index_tool, tool in enumerate(tool_para_slant):
 	flag = 0
 	pool = []
-	pool.append(tool[0])
+	pool.append(tool[0])	# Noを保存
+	pool.append(0)			# Trueの数を格納
 	for index_part, part in enumerate(two_slant_part):
 		if tool[1] - stroke_two/2 < float(part[3]) and tool[1] + stroke_two/2 > float(part[3]):	#ストローク確認
 			if tool[2] > float(part[4])/2 and tool[2] < float(part[4])*2:	#指の長さ確認
 				if tool[3] - phy < float(part[5]) and tool[3] + phy > float(part[5]):	#傾斜確認
 					pool.append(True)
+					pool[1] += 1	# Trueの数を追加
 					flag =1
 					continue
 		pool.append( False)
@@ -158,6 +161,7 @@ pprint.pprint(two_slant_part)
 #pprint.pprint( tool_TF_slant)
 print()
 print("output min combination")
+tool_TF_slant.sort(key=itemgetter(1))	# Trueの数をでソートする
 Check_min_combnation(tool_TF_slant)
 pprint.pprint(tool_TF_slant)
 # 生き残ったパラメータをNoから出力
@@ -165,10 +169,13 @@ for tool in tool_TF_slant:
 	print(tool_para_slant[tool[0]])
 print()
 
+# メモリ省エネのために使用済みリストを削除
+del tool_TF_slant
+del tool_para_slant
 
 ###### 2指の曲率について、しらみつぶしを考える
 tool_TF_curv = []
-curv = 5	### 曲率の幅、前後に5mm与える
+curv_two = 5.0	### 曲率の幅、前後に5mm与える
 
 ##### 次に、それぞれのパラメータの探索範囲（最大値と最小値）を決定
 ##### ストロークはマイナスになったら計算数が大くなるだけやから、無視する
@@ -178,8 +185,8 @@ if stroke_curv_min < 0:	#マイナスになったら計算数が大くなるだ�
 stroke_curv_max = Max_parameter(two_curv_part, 3) + stroke_two/2
 finger_curv_min = Min_parameter(two_curv_part, 4) / 2
 finger_curv_max = Max_parameter(two_curv_part, 4) * 1.5
-curv_min = Min_parameter(two_curv_part, 6) - curv
-curv_max = Max_parameter(two_curv_part, 6) + curv
+curv_min = Min_parameter(two_curv_part, 6) - curv_two
+curv_max = Max_parameter(two_curv_part, 6) + curv_two
 tool_para_curv = []
 
 ##### で、その値をもとに把持ツールパラメータ一覧を作成
@@ -204,15 +211,19 @@ while stroke_curv <= stroke_curv_max:
 print("Create " + str(len(tool_para_curv)) + " tools of curv")
 
 ## ストローク、指の長さ、曲率の順で条件を満たすか確認する、結果を真偽で格納
+## 全部 偽 やったらいらんから flagで管理
+## 保存形式は [No, num of T, TF, TF, ... ]
 for index_tool, tool in enumerate(tool_para_curv):
 	flag = 0
 	pool = []
-	pool.append(tool[0])
+	pool.append(tool[0])	# Noを保存
+	pool.append(0)			# Trueの数を格納
 	for index_part, part in enumerate(two_curv_part):
 		if tool[1] - stroke_two/2 < float(part[3]) and tool[1] + stroke_two/2 > float(part[3]):	#ストローク確認
 			if tool[2] > float(part[4])/2 and tool[2] < float(part[4])*2:	#指の長さ確認
-				if tool[3] - curv < float(part[6]) and tool[3] + curv > float(part[6]):	#曲率確認
+				if tool[3] - curv_two < float(part[6]) and tool[3] + curv_two > float(part[6]):	#曲率確認
 					pool.append(True)
+					pool[1] += 1	# Trueの数を追加
 					flag = 1
 					continue
 		pool.append( False)
@@ -225,12 +236,18 @@ pprint.pprint(two_curv_part)
 print()
 
 print("output min combination")
+tool_TF_curv.sort(key=itemgetter(1))	# Trueの数をでソートする
 Check_min_combnation(tool_TF_curv)
 pprint.pprint(tool_TF_curv)
 # 生き残ったパラメータをNoから出力
 for tool in tool_TF_curv:
 	print(tool_para_curv[tool[0]])
 print()
+
+# メモリ省エネのために使用済みリストを削除
+del tool_TF_curv
+del tool_para_curv
+
 
 
 ###### 3指について、しらみつぶしを考える
@@ -252,7 +269,8 @@ tool_para_three = []
 No = 0
 stroke_three_para = stroke_three_min
 finger_three = finger_three_min
-d_three = 1.0
+d_three = 0.5
+d_finger = 5.0
 
 while stroke_three_para <= stroke_three_max:
 	while finger_three <= finger_three_max:
@@ -266,16 +284,19 @@ print("Create " + str(len(tool_para_three)) + " tools of three")
 
 
 
-## ストローク、指の長さの順で条件を満たすか確認する、結果を真偽で格納
+## ストローク、指の長さの順で条件を満たすか確認する、結果を真偽で格納## 全部 偽 やったらいらんから flagで管理
+## 保存形式は [No, num of T, TF, TF, ... ]
 for index_tool, tool in enumerate(tool_para_three):
 	flag = 0
 	pool = []
-	pool.append(tool[0])
+	pool.append(tool[0])	# Noを保存
+	pool.append(0)			# Trueの数を格納
 	for index_part, part in enumerate(three_part):
 		if tool[1] - stroke_three/2 < float(part[3]) and tool[1] + stroke_three/2 > float(part[3]):	#ストローク確認
-			if tool[2] > float(part[4])/2 and tool[2] < float(part[4])*2:	#指の長さ確認
+			if tool[2] > float(part[4])/2 and tool[2] < float(part[4])*3:	#指の長さ確認
 				flag = 1
 				pool.append(True)
+				pool[1] += 1	# Trueの数を追加
 				continue
 		pool.append( False)
 	if flag == 0:
@@ -287,6 +308,7 @@ pprint.pprint(three_part)
 print()
 
 print("output min combination")
+tool_TF_three.sort(key=itemgetter(1))	# Trueの数をでソートする
 Check_min_combnation(tool_TF_three)
 pprint.pprint(tool_TF_three)
 # 生き残ったパラメータをNoから出力
@@ -294,11 +316,6 @@ for tool in tool_TF_three:
 	print(tool_para_three[tool[0]])
 print()
 
-
-
-#print("two_slant_part")
-#print(two_slant_part)
-#print("two_curv_part")
-#print(two_curv_part)
-#print("three finger")
-#print(three_part)
+# メモリ省エネのために使用済みリストを削除
+del tool_TF_three
+del tool_para_three
