@@ -1,4 +1,5 @@
 import pprint
+import math
 import sys
 import csv
 import copy
@@ -60,6 +61,10 @@ def Min_parameter(tool_para, para_num):
 			min = float(tool[para_num])
 	return min
 
+### 傾斜と指の長さから最小のストロークを求める関数 ###
+def calc_slant_stroke(slant, finger, defo_stroke):
+	return round( 2 * finger * math.tan(math.radians(slant/2) ) ) + defo_stroke/2
+
 ####################################
 ##### 関数一覧終わり！！ ###########
 ####################################
@@ -98,7 +103,8 @@ for row in f:
 ###### 2指の傾斜について、しらみつぶしで探す 
 ###### まずは結果を格納するリストを作成
 tool_TF_slant = []
-stroke_two = 48.0 ### SMCの2指ハンド
+#stroke_two = 48.0 ### SMCの2指ハンド
+stroke_two = 60.0 ### THKの電気ハンド
 phy = 5.0	### 傾斜の幅、前後に5度与える
 
 ##### 次に、それぞれのパラメータの探索範囲（最大値と最小値）を決定
@@ -121,18 +127,18 @@ finger_slant = finger_slant_min
 slant = slant_min
 d_slant = 1.0
 d_finger = 10.0
-d_stroke = 4.0
+d_stroke = stroke_two / 12
 
-while stroke_slant <= stroke_slant_max:
+while slant <= slant_max:
 	while finger_slant <= finger_slant_max:
-		while slant <= slant_max:
+		while stroke_slant <= stroke_slant_max:
 			tool_para_slant.append([No, stroke_slant, finger_slant, slant])
-			slant += d_slant
+			stroke_slant += d_stroke
 			No += 1
-		slant = slant_min
 		finger_slant += d_finger
+		stroke_slant = calc_slant_stroke(slant, finger_slant, stroke_two)
 	finger_slant = finger_slant_min
-	stroke_slant += d_stroke
+	slant += d_slant
 
 print("Create " + str(len(tool_para_slant)) + " tools of slant")
 
