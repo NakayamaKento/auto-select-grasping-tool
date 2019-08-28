@@ -1,5 +1,4 @@
 import pprint
-import math
 import sys
 import csv
 import copy
@@ -27,7 +26,7 @@ def Check(tool_TF, index):	#index行目が不必要かどうかを判断する
 
 	for tool_index, tool in enumerate(tool_list):
 		for part_index, part in enumerate(check_list):
-			if part_index == 0 or part_index == 1:	#check_listの0番目の要素はNoのとこやからそこは問答無用でTrueにしとく、1番目もTrueの数やから無視する
+			if part_index == 0 or part_index == 1:	#check_listの0番目の要素はNoのとこやからそこは問答無用でTrueにしとく
 				check_list[part_index] = True
 				continue
 			if tool_list[tool_index][part_index] == True:	#他のパラメータでカバーできているか確認
@@ -60,10 +59,6 @@ def Min_parameter(tool_para, para_num):
 		if min > float(tool[para_num]):
 			min = float(tool[para_num])
 	return min
-
-### 傾斜と指の長さから最小のストロークを求める関数 ###
-def calc_slant_stroke(slant, finger, defo_stroke):
-	return round( 2 * finger * math.tan(math.radians(slant/2) ) ) + defo_stroke/2
 
 ####################################
 ##### 関数一覧終わり！！ ###########
@@ -104,7 +99,6 @@ for row in f:
 ###### まずは結果を格納するリストを作成
 tool_TF_slant = []
 stroke_two = 48.0 ### SMCの2指ハンド
-#stroke_two = 60.0 ### THKの電気ハンド
 phy = 5.0	### 傾斜の幅、前後に5度与える
 
 ##### 次に、それぞれのパラメータの探索範囲（最大値と最小値）を決定
@@ -127,21 +121,20 @@ finger_slant = finger_slant_min
 slant = slant_min
 d_slant = 1.0
 d_finger = 10.0
-d_stroke = stroke_two / 12
+d_stroke = 4.0
 
-while slant <= slant_max:
+while stroke_slant <= stroke_slant_max:
 	while finger_slant <= finger_slant_max:
-		while stroke_slant <= stroke_slant_max:
+		while slant <= slant_max:
 			tool_para_slant.append([No, stroke_slant, finger_slant, slant])
-			stroke_slant += d_stroke
+			slant += d_slant
 			No += 1
+		slant = slant_min
 		finger_slant += d_finger
-		stroke_slant = calc_slant_stroke(slant, finger_slant, stroke_two)
 	finger_slant = finger_slant_min
-	slant += d_slant
+	stroke_slant += d_stroke
 
 print("Create " + str(len(tool_para_slant)) + " tools of slant")
-print("Use " + str(stroke_two) + "mm stroke")
 
 ## ストローク、指の長さ、傾斜の順で条件を満たすか確認する、結果を真偽で格納
 ## 全部 偽 やったらいらんから flagで管理
@@ -161,10 +154,8 @@ for index_tool, tool in enumerate(tool_para_slant):
 					continue
 		pool.append( False)
 	if flag == 0:
-		del(pool)
 		continue
 	tool_TF_slant.append(pool)
-	del(pool)
 
 pprint.pprint(two_slant_part)
 #pprint.pprint( tool_TF_slant)
@@ -218,7 +209,6 @@ while stroke_curv <= stroke_curv_max:
 	stroke_curv += d_curv
 
 print("Create " + str(len(tool_para_curv)) + " tools of curv")
-print("Use " + str(stroke_two) + "mm stroke")
 
 ## ストローク、指の長さ、曲率の順で条件を満たすか確認する、結果を真偽で格納
 ## 全部 偽 やったらいらんから flagで管理
@@ -238,10 +228,8 @@ for index_tool, tool in enumerate(tool_para_curv):
 					continue
 		pool.append( False)
 	if flag == 0:
-		del(pool)
 		continue
 	tool_TF_curv.append(pool)
-	del(pool)
 
 pprint.pprint(two_curv_part)
 #pprint.pprint(tool_TF_curv)
@@ -272,18 +260,16 @@ stroke_three_min = Min_parameter(three_part, 3) - stroke_three/2
 if stroke_three_min < 0:	#マイナスになったら計算数が大くなるだけやから、無視する
 	stroke_three_min = 0
 stroke_three_max = Max_parameter(three_part, 3) + stroke_three/2
-finger_three_min = float(Min_parameter(three_part, 4)) / 2.0
-finger_three_max = float(Max_parameter(three_part, 4)) * 1.5
+finger_three_min = Min_parameter(three_part, 4) / 2
+finger_three_max = Max_parameter(three_part, 4) * 1.5
 tool_para_three = []
-
-print("min finger" + str(finger_three_min))
 
 ##### で、その値をもとに把持ツールパラメータ一覧を作成
 ##### 刻み幅は d_finger, d_stroke で管理（指とストロークは他のやつでも共通の値）
 No = 0
 stroke_three_para = stroke_three_min
 finger_three = finger_three_min
-d_three = 1
+d_three = 0.5
 d_finger = 5.0
 
 while stroke_three_para <= stroke_three_max:
@@ -295,7 +281,6 @@ while stroke_three_para <= stroke_three_max:
 	stroke_three_para += d_three
 
 print("Create " + str(len(tool_para_three)) + " tools of three")
-print("Use " + str(stroke_three) + "mm stroke")
 
 
 
@@ -308,24 +293,23 @@ for index_tool, tool in enumerate(tool_para_three):
 	pool.append(0)			# Trueの数を格納
 	for index_part, part in enumerate(three_part):
 		if tool[1] - stroke_three/2 < float(part[3]) and tool[1] + stroke_three/2 > float(part[3]):	#ストローク確認
-			if (tool[2] > float(part[4])/2.0 and tool[2] < float(part[4])*3.0) or (float(part[4]) < 5.0 and tool[2] <= 10.0):	#指の長さ確認，5mm以下の時は10mm以下の指を問答無用で採用
+			if tool[2] > float(part[4])/2 and tool[2] < float(part[4])*3:	#指の長さ確認
 				flag = 1
 				pool.append(True)
 				pool[1] += 1	# Trueの数を追加
 				continue
-		pool.append(False)
+		pool.append( False)
 	if flag == 0:
 		continue
 	tool_TF_three.append(pool)
-	
+
 pprint.pprint(three_part)
 #pprint.pprint(tool_TF_three)
-print(str(len(tool_TF_three)))
+print()
 
 print("output min combination")
 tool_TF_three.sort(key=itemgetter(1))	# Trueの数をでソートする
 Check_min_combnation(tool_TF_three)
-print("len TF" + str(len(tool_TF_three)))
 pprint.pprint(tool_TF_three)
 # 生き残ったパラメータをNoから出力
 for tool in tool_TF_three:
@@ -335,5 +319,3 @@ print()
 # メモリ省エネのために使用済みリストを削除
 del tool_TF_three
 del tool_para_three
-
-print("finish output")
